@@ -1,0 +1,59 @@
+#pragma once
+ 
+#include "NodeBase.h"
+#include "util/IdUtil.h"
+#include "types/Preset.h"
+
+struct ViewDataNode : public NodeBase {
+
+    NodeOutput cached_input; // última entrada recebida
+    bool has_input = false;
+
+    ViewDataNode(int id):
+        NodeBase(id, "View Data") {
+            inputs.emplace_back(
+                NextID(),
+                id,
+                "Value",
+                PinType::String  // aceita qualquer coisa
+            );
+        }
+
+    // Chamado a cada frame pelo main.cpp com o dado atual do pin
+    void SetInput(NodeOutput data) {
+        cached_input = data;
+        has_input    = true;
+    }
+
+    void DrawContent() override {
+        ImGui::SetNextItemWidth(160);
+
+        if (!has_input) {
+            ImGui::TextDisabled("Sem conexão");
+            return;
+        }
+
+        std::visit([](const auto& val) {
+            using T = std::decay_t<decltype(val)>;
+
+            if constexpr (std::is_same_v<T, int>) {
+                ImGui::Text("Int: %d", val);
+            }
+            else if constexpr (std::is_same_v<T, float>) {
+                ImGui::Text("Float: %.4f", val);
+            }
+            else if constexpr (std::is_same_v<T, bool>) {
+                ImGui::Text("Bool: %s", val ? "true" : "false");
+            }
+            else if constexpr (std::is_same_v<T, std::string>) {
+                ImGui::Text("String:");
+                ImGui::TextDisabled("%.60s", val.c_str());
+            }
+            else if constexpr (std::is_same_v<T, Preset>) {
+                ImGui::Text("Preset:");
+                ImGui::Text("  %.40s", val.name);
+                ImGui::TextDisabled("  %.60s", val.path);
+            }
+        }, cached_input.value);
+    }
+};

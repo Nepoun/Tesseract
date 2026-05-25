@@ -69,5 +69,7 @@ vcpkg_installed/
 Testing/
 .cache/
 
+.src/tools/
+
 demo.cpp
 imgui.ini

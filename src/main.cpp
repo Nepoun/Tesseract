@@ -183,51 +183,28 @@ int main(int argc, char* argv[])
             }
 
 
-            //auto& é uma interferencia de tipo. & é usado para não iterar sobre COPIAS dos unique_ptr, o que causaria erro pois não podem ser copiados
-            //& você itera sobre referencias aos originais no vetor
             for (auto& node : nodes) {
+                node->get_input = GetInputData;
                 node->Draw();
-            
-                // "->" acessa membros através de um ponteiro (é um .)
                 node->pos = ImNodes::GetNodeGridSpacePos(node->id);
-                if (auto* conv = dynamic_cast<ConversorNode*>(node.get())) {
-                    if (conv->status == ConversorNode::Status::Running && !conv->task.valid()) {
-                        
-                        NodePin& preset_pin = conv->inputs[0];
-                        NodePin& folder_pin = conv->inputs[1];
-                        NodePin& exe_pin = conv->inputs[2];
-
-                        NodeOutput preset_data = GetInputData(preset_pin.id);
-                        NodeOutput folder_data = GetInputData(folder_pin.id);
-                        NodeOutput exe_data = GetInputData(exe_pin.id);
-
-                        const char* preset_path = nullptr;
-                        const char* folder_path = nullptr;
-                        const char* exe_path = nullptr;
-
-                        if (std::holds_alternative<Preset>(preset_data.value)){
-                            preset_path = std::get<Preset>(preset_data.value).path;
-                        }
-                        if (std::holds_alternative<std::string>(folder_data.value)){
-                            folder_path = std::get<std::string>(folder_data.value).c_str();
-                        }
-                        if (std::holds_alternative<std::string>(exe_data.value)){
-                            exe_path = std::get<std::string>(exe_data.value).c_str();
-                        }
-                        conv->Run(preset_path, folder_path, exe_path);
-                    }
-                }
-
-                if (auto* view = dynamic_cast<ViewDataNode*>(node.get())) {
-                    NodeOutput data = GetInputData(view->inputs[0].id);
-                    view->SetInput(data);
-                }
-
+                node->OnTick();
             }
 
-            for (const auto& [id, link] : GetRuntimeNodeRegistry().links)
+            for (const auto& [id, link] : GetRuntimeNodeRegistry().links) {
+                // Acha o pin de saída para pegar o tipo
+                NodePin* pin = GetRuntimeNodeRegistry().GetPin(link.pin_start);
+                if (pin) {
+                    ImNodes::PushColorStyle(ImNodesCol_Link,        PinColor(pin->type));
+                    ImNodes::PushColorStyle(ImNodesCol_LinkHovered, PinColor(pin->type));
+                    ImNodes::PushColorStyle(ImNodesCol_LinkSelected,PinColor(pin->type));
+                }
                 ImNodes::Link(link.id, link.pin_start, link.pin_end);
-
+                if (pin) {
+                    ImNodes::PopColorStyle();
+                    ImNodes::PopColorStyle();
+                    ImNodes::PopColorStyle();
+                }
+            }
 
         ImNodes::EndNodeEditor();
 

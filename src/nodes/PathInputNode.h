@@ -11,7 +11,6 @@ struct PathInputNode : public NodeBase {
 
     const char* default_path = "C:/Users/purpl/Desktop/NovoEu/BOBimg2pix/test input";
 
-
     bool verified = false;
     bool file_exists = false;
 
@@ -43,15 +42,6 @@ struct PathInputNode : public NodeBase {
         return !path.empty();
     }
 
-    void NormalizePath()
-    {
-        for (char& c : path)
-        {
-            if (c == '/')
-                c = '\\';
-        }
-    }
-
     void DrawContent() override {
         // ── Input ──────────────────────────────────────
         char buffer[512];
@@ -65,7 +55,7 @@ struct PathInputNode : public NodeBase {
         {
             path = buffer;
 
-            NormalizePath();
+            NormalizePath(path);
 
             // invalida verificação antiga
             verified = false;
@@ -92,7 +82,7 @@ struct PathInputNode : public NodeBase {
         if (ImGui::SmallButton("Default"))
         {
             path = default_path;
-            NormalizePath();
+            NormalizePath(path);
 
             verified = false;
             file_exists = false;

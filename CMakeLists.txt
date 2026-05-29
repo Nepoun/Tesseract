@@ -37,7 +37,7 @@ add_executable(TextureTool
     src/util/IdUtil.h
 )
 
-target_compile_definitions(TextureTool PRIVATE _GLIBCXX_HAVE_AT_QUICK_EXIT=0)
+#target_compile_definitions(TextureTool PRIVATE _GLIBCXX_HAVE_AT_QUICK_EXIT=0)
 target_include_directories(TextureTool PRIVATE
     src/
     src/nodes/
@@ -45,11 +45,21 @@ target_include_directories(TextureTool PRIVATE
     src/libs/imgui/
     src/libs/imgui/backends/
     src/libs/ImNodes/
+    src/include/
+)
+
+add_custom_command(TARGET TextureTool POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "C:/msys64/ucrt64/bin/libstdc++-6.dll"
+        "C:/msys64/ucrt64/bin/libgcc_s_seh-1.dll"
+        "C:/msys64/ucrt64/bin/libwinpthread-1.dll"
+        $<TARGET_FILE_DIR:TextureTool>
 )
 
 file(COPY ${CMAKE_SOURCE_DIR}/tools/slk
      DESTINATION ${CMAKE_BINARY_DIR})
 
 find_package(SDL2 REQUIRED)
+target_link_options(TextureTool PRIVATE -static-libgcc -static-libstdc++)
 target_link_libraries(TextureTool PRIVATE SDL2::SDL2main SDL2::SDL2 opengl32)
 message(STATUS "CXX compiler: ${CMAKE_CXX_COMPILER}")

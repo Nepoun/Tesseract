@@ -6,6 +6,7 @@
 #include "imgui.h"
 #include "imnodes.h"
 #include "pins/NodePin.h"
+#include "nlohmann/json.hpp"
 
 struct NodeOutput {
     std::string output_name;
@@ -15,6 +16,7 @@ struct NodeOutput {
 
 struct NodeBase {
     int id;
+    std::string type_id;
     std::string title;
     std::vector<NodePin> inputs;
     std::vector<NodePin> outputs;
@@ -22,8 +24,8 @@ struct NodeBase {
     ImU32 node_color = IM_COL32(60, 60, 60, 255);
     std::function<NodeOutput(int)> get_input;
 
-    NodeBase(int id, const char* title):
-        id(id), title(title), pos(0, 0) {}
+    NodeBase(int id, const char* type_id, const char* title):
+        id(id), type_id(type_id), title(title), pos(0, 0) {}
 
     virtual ~NodeBase() = default;
 
@@ -34,6 +36,21 @@ struct NodeBase {
     virtual bool IsReadyToRun() { return true; }
     virtual void OnRun() {}
     virtual void OnTick() {}
+
+    virtual nlohmann::json Serialize() const {
+        return {
+            { "title", title},
+            { "type_id",  type_id },
+            { "id",    id    },
+            { "pos_x", pos.x },
+            { "pos_y", pos.y },
+            { "input_ids",  [&]{ std::vector<int> v; for (auto& p : inputs)  v.push_back(p.id); return v; }() },
+            { "output_ids", [&]{ std::vector<int> v; for (auto& p : outputs) v.push_back(p.id); return v; }() }
+        };
+    }
+
+    virtual void Deserialize(const nlohmann::json& j) {
+    }
 
     void Draw() {
         ImNodes::PushColorStyle(ImNodesCol_NodeBackground,        node_color);

@@ -15,14 +15,22 @@ struct PresetNode : public NodeBase {
     const char* default_name = "Default";
     const char* default_path = "C:/Users/purpl/Desktop/NovoEu/BOBimg2pix/build/presettarget.json";
 
+    nlohmann::json Serialize() const override {
+        auto j = NodeBase::Serialize();
+        j["preset"] = SerializePreset(preset);
+        return j;
+    }
+
+    void Deserialize(const nlohmann::json& j) override {
+        NodeBase::Deserialize(j);
+        if (j.contains("preset"))
+            preset = DeserializePreset(j["preset"]);
+    }
+
     PresetNode(int id):
-        NodeBase(id, "Preset") {
-            outputs.emplace_back(
-                NextID(),
-                id,
-                "Preset",
-                PinType::Preset
-            );
+        NodeBase(id, "preset_node", "Preset") {
+            node_color = IM_COL32(50, 55, 75, 255);
+            outputs.emplace_back( NextID(), id, "Preset", PinType::Preset);
         }
 
     NodeOutput GetOutput() override {

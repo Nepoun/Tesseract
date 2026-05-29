@@ -17,7 +17,7 @@ struct ConversorNode : public NodeBase {
     
     std::future<void> task;
 
-    ConversorNode(int id): NodeBase(id, "Conversor") {
+    ConversorNode(int id): NodeBase(id, "conversor_node", "Conversor") {
         node_color = IM_COL32(50, 60, 80, 255); 
         inputs.emplace_back(NextID(), id, "Preset",      PinType::Preset);
         inputs.emplace_back(NextID(), id, "Folder Path", PinType::String);
@@ -29,6 +29,19 @@ struct ConversorNode : public NodeBase {
     // Contrato com NodeBase
     // -------------------------
 
+    nlohmann::json Serialize() const override {
+        auto j = NodeBase::Serialize();
+        j["output_folder"] = output_folder;
+        return j;
+    }
+    void Deserialize(const nlohmann::json& j) override {
+        NodeBase::Deserialize(j);
+        if (j.contains("output_folder"))
+            strncpy(output_folder,
+                    j["output_folder"].get<std::string>().c_str(),
+                    sizeof(output_folder));
+    }
+    
     bool HasRunButton() override {
         return true;
     }

@@ -8,7 +8,8 @@ struct ViewDataNode : public NodeBase {
     NodeOutput cached_input;
     bool has_input = false;
 
-    ViewDataNode(int id): NodeBase(id, "View Data") {
+    ViewDataNode(int id): NodeBase(id, "dataview_node", "View Data") {
+        node_color = IM_COL32(55, 70, 75, 255);
         inputs.emplace_back(NextID(), id, "Value", PinType::String);
     }
 

@@ -18,6 +18,7 @@
 #include "registry/RuntimeNodeRegistry.h"
 
 #include "util/IdUtil.h"
+#include "util/SaveLoad.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
@@ -66,6 +67,41 @@ NodeOutput GetInputData(int input_pin_id)
     return {};
 }
 
+void DebugRegistry(const std::vector<std::unique_ptr<NodeBase>>& nodes)
+{
+    auto& runtime = GetRuntimeNodeRegistry();
+
+    std::cout
+        << "[State] nodes="
+        << nodes.size()
+        << " runtime_nodes="
+        << runtime.nodes.size()
+        << " pins="
+        << runtime.pins.size()
+        << " links="
+        << runtime.links.size()
+        << "\n";
+
+    for (const auto& [id, ptr] : runtime.nodes) {
+
+        bool found = false;
+
+        for (const auto& node : nodes) {
+            if (node.get() == ptr) {
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            std::cout
+                << "[Warning] Dangling node ptr: "
+                << id
+                << "\n";
+        }
+    }
+}
+
 int main(int argc, char* argv[])
 {
     // =========================
@@ -106,6 +142,7 @@ int main(int argc, char* argv[])
 
     std::vector<std::unique_ptr<NodeBase>> nodes;
     GetNodeRegistry().push_back({
+        "preset_node",
         "Preset Node",
         [](std::function<int()> next) {
             int id = next();
@@ -114,6 +151,7 @@ int main(int argc, char* argv[])
     });
     
     GetNodeRegistry().push_back({
+        "conversor_node",
         "Conversor Node",
         [](std::function<int()> next) {
             int id         = next();
@@ -122,6 +160,7 @@ int main(int argc, char* argv[])
     });
 
     GetNodeRegistry().push_back({
+        "dataview_node",
         "View Data Node",
         [](std::function<int()> next) {
             return std::make_unique<ViewDataNode>(next());
@@ -129,6 +168,7 @@ int main(int argc, char* argv[])
     });
 
     GetNodeRegistry().push_back({
+        "string_node",
         "String Creator Node",
         [](std::function<int()> next) {
             return std::make_unique<StringNode>(next());
@@ -136,6 +176,7 @@ int main(int argc, char* argv[])
     });
 
     GetNodeRegistry().push_back({
+        "path_node",
         "Path Formatter Node",
         [](std::function<int()> next) {
             return std::make_unique<PathInputNode>(next());
@@ -190,6 +231,12 @@ int main(int argc, char* argv[])
                 node->OnTick();
             }
 
+            if (!g_pending_links.empty()) {
+                for (auto& lnk : g_pending_links)
+                    GetRuntimeNodeRegistry().RegisterLink(lnk);
+                g_pending_links.clear();
+            }
+
             for (const auto& [id, link] : GetRuntimeNodeRegistry().links) {
                 // Acha o pin de saída para pegar o tipo
                 NodePin* pin = GetRuntimeNodeRegistry().GetPin(link.pin_start);
@@ -223,6 +270,16 @@ int main(int argc, char* argv[])
                     ImNodes::SetNodeScreenSpacePos(node->id, spawn_pos);
                     nodes.push_back(std::move(node));
                     GetRuntimeNodeRegistry().RegisterNode(nodes.back().get());
+
+                    std::cout
+                        << "[Node Created] "
+                        << nodes.back()->title
+                        << " id="
+                        << nodes.back()->id
+                        << "\n";
+
+                    DebugRegistry(nodes);
+
                 }
             }
 
@@ -239,13 +296,26 @@ int main(int argc, char* argv[])
                 new_link.pin_end = end_pin;
 
                 GetRuntimeNodeRegistry().RegisterLink(new_link);
+
+                std::cout
+                    << "[Link Created] "
+                    << new_link.pin_start
+                    << " -> "
+                    << new_link.pin_end
+                    << "\n";
+
             }
         }
 
         {
             int destroyed_id;
-            if (ImNodes::IsLinkDestroyed(&destroyed_id))
+            if (ImNodes::IsLinkDestroyed(&destroyed_id)){
                 GetRuntimeNodeRegistry().RemoveLink(destroyed_id);
+                std::cout
+                    << "[Link Removed] id="
+                    << destroyed_id
+                    << "\n";
+            }
         }
 
         if (ImGui::IsKeyPressed(ImGuiKey_Delete)) {
@@ -274,11 +344,25 @@ int main(int argc, char* argv[])
                     ),
                     nodes.end()
                 );
+                DebugRegistry(nodes);
             }
         }
 
 
         ImGui::End();
+
+        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_S))
+            SaveGraph(nodes, "graph.json");
+
+        if (ImGui::IsKeyDown(ImGuiKey_LeftCtrl) && ImGui::IsKeyPressed(ImGuiKey_O)) {
+            LoadGraph(nodes, "graph.json");
+
+            ImNodes::DestroyContext();
+            ImNodes::CreateContext();
+            std::cout << "[ImNodes] Context recreated\n";
+            first_frame = true; 
+            DebugRegistry(nodes);
+        }
 
         ImGui::Render();
 

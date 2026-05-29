@@ -5,6 +5,7 @@
 #include <atomic>
 #include <string>
 #include "util/IdUtil.h"
+#include "util/Palette.h"
 
 struct ConversorNode : public NodeBase {
 
@@ -18,7 +19,7 @@ struct ConversorNode : public NodeBase {
     std::future<void> task;
 
     ConversorNode(int id): NodeBase(id, "conversor_node", "Conversor") {
-        node_color = IM_COL32(50, 60, 80, 255); 
+        node_color = Palette(3);
         inputs.emplace_back(NextID(), id, "Preset",      PinType::Preset);
         inputs.emplace_back(NextID(), id, "Folder Path", PinType::String);
         inputs.emplace_back(NextID(), id, "EXE Prefix",  PinType::String);

@@ -7,7 +7,7 @@ struct StringNode : public NodeBase {
     char text_buf[512] = "";
 
     StringNode(int id): NodeBase(id, "string_node", "Simple String") {
-        node_color = IM_COL32(50, 75, 55, 255); 
+        node_color = Palette(47);
         outputs.emplace_back(NextID(), id, "String", PinType::String);
     }
 

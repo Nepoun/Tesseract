@@ -9,7 +9,7 @@ struct ViewDataNode : public NodeBase {
     bool has_input = false;
 
     ViewDataNode(int id): NodeBase(id, "dataview_node", "View Data") {
-        node_color = IM_COL32(55, 70, 75, 255);
+        node_color = Palette(63);
         inputs.emplace_back(NextID(), id, "Value", PinType::String);
     }
 

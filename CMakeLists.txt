@@ -36,6 +36,8 @@ add_executable(TextureTool
     src/types/Preset.h
     src/util/IdUtil.h
     src/util/SaveLoad.h
+    src/util/Palette.h
+    src/nodes/PaletteViewerNode.h
 )
 
 #target_compile_definitions(TextureTool PRIVATE _GLIBCXX_HAVE_AT_QUICK_EXIT=0)

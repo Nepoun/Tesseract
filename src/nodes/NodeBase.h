@@ -7,6 +7,7 @@
 #include "imnodes.h"
 #include "pins/NodePin.h"
 #include "nlohmann/json.hpp"
+#include "util/Palette.h"
 
 struct NodeOutput {
     std::string output_name;
@@ -21,7 +22,7 @@ struct NodeBase {
     std::vector<NodePin> inputs;
     std::vector<NodePin> outputs;
     ImVec2 pos;
-    ImU32 node_color = IM_COL32(60, 60, 60, 255);
+    ImU32 node_color = Palette(17);
     std::function<NodeOutput(int)> get_input;
 
     NodeBase(int id, const char* type_id, const char* title):
@@ -51,57 +52,142 @@ struct NodeBase {
 
     virtual void Deserialize(const nlohmann::json& j) {
     }
-
     void Draw() {
-        ImNodes::PushColorStyle(ImNodesCol_NodeBackground,        node_color);
-        ImNodes::PushColorStyle(ImNodesCol_NodeBackgroundHovered, node_color);
-        ImNodes::PushColorStyle(ImNodesCol_NodeBackgroundSelected,node_color);
+
+        ImNodes::PushColorStyle(
+            ImNodesCol_NodeBackground,
+            Palette(4)
+        );
+
+        ImNodes::PushColorStyle(
+            ImNodesCol_NodeBackgroundHovered,
+            Palette(5)
+        );
+
+        ImNodes::PushColorStyle(
+            ImNodesCol_NodeBackgroundSelected,
+            Palette(6)
+        );
+
+        // TITLE BAR
+        ImNodes::PushColorStyle(
+            ImNodesCol_TitleBar,
+            node_color
+        );
+
+        ImNodes::PushColorStyle(
+            ImNodesCol_TitleBarHovered,
+            node_color
+        );
+
+        ImNodes::PushColorStyle(
+            ImNodesCol_TitleBarSelected,
+            node_color
+        );
+
+
+
         ImNodes::BeginNode(id);
+        
+        ImU32 title_text_color = GetTextColorForBackground(node_color);
+
+        ImGui::PushStyleColor(
+            ImGuiCol_Text,
+            ImGui::ColorConvertU32ToFloat4(title_text_color)
+        );
 
         ImNodes::BeginNodeTitleBar();
             ImGui::TextUnformatted(title.c_str());
         ImNodes::EndNodeTitleBar();
 
+        ImGui::PopStyleColor();
+
         for (auto& pin : inputs) {
+
             if (pin.node_id != id)
                 pin.node_id = id;
-            ImNodes::PushColorStyle(ImNodesCol_Pin,        PinColor(pin.type));
-            ImNodes::PushColorStyle(ImNodesCol_PinHovered, PinColor(pin.type));
-            ImNodes::PushAttributeFlag(ImNodesAttributeFlags_EnableLinkDetachWithDragClick);
+
+            ImNodes::PushColorStyle(
+                ImNodesCol_Pin,
+                PinColor(pin.type)
+            );
+
+            ImNodes::PushColorStyle(
+                ImNodesCol_PinHovered,
+                PinColor(pin.type)
+            );
+
+            ImNodes::PushAttributeFlag(
+                ImNodesAttributeFlags_EnableLinkDetachWithDragClick
+            );
+
             ImNodes::BeginInputAttribute(pin.id);
+
                 ImGui::Indent(40);
                 ImGui::Text("%.40s", pin.name.c_str());
+
             ImNodes::EndInputAttribute();
+
             ImNodes::PopAttributeFlag();
+
             ImNodes::PopColorStyle();
             ImNodes::PopColorStyle();
         }
 
         ImGui::PushID(id);
+
             DrawContent();
 
             if (HasRunButton()) {
+
                 bool ready = IsReadyToRun();
-                if (!ready) ImGui::BeginDisabled();
-                if (ImGui::Button("Run")) OnRun();
-                if (!ready) ImGui::EndDisabled();
+
+                if (!ready)
+                    ImGui::BeginDisabled();
+
+                if (ImGui::Button("Run"))
+                    OnRun();
+
+                if (!ready)
+                    ImGui::EndDisabled();
             }
+
         ImGui::PopID();
 
         for (auto& pin : outputs) {
+
             if (pin.node_id != id)
                 pin.node_id = id;
-            ImNodes::PushColorStyle(ImNodesCol_Pin,        PinColor(pin.type));
-            ImNodes::PushColorStyle(ImNodesCol_PinHovered, PinColor(pin.type));
+
+            ImNodes::PushColorStyle(
+                ImNodesCol_Pin,
+                PinColor(pin.type)
+            );
+
+            ImNodes::PushColorStyle(
+                ImNodesCol_PinHovered,
+                PinColor(pin.type)
+            );
+
             ImNodes::BeginOutputAttribute(pin.id);
+
                 ImGui::Indent(40);
                 ImGui::Text("%.40s", pin.name.c_str());
+
             ImNodes::EndOutputAttribute();
+
             ImNodes::PopColorStyle();
             ImNodes::PopColorStyle();
         }
 
         ImNodes::EndNode();
+
+        // Node background
+        ImNodes::PopColorStyle();
+        ImNodes::PopColorStyle();
+        ImNodes::PopColorStyle();
+
+        // Titlebar
         ImNodes::PopColorStyle();
         ImNodes::PopColorStyle();
         ImNodes::PopColorStyle();

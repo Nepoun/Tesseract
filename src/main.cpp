@@ -13,12 +13,14 @@
 #include "nodes/ViewDataNode.h"
 #include "nodes/StringNode.h"
 #include "nodes/PathInputNode.h"
+#include "nodes/PaletteViewerNode.h"
 
 #include "registry/NodeRegistry.h"
 #include "registry/RuntimeNodeRegistry.h"
 
 #include "util/IdUtil.h"
 #include "util/SaveLoad.h"
+#include "util/Palette.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_opengl.h>
@@ -28,15 +30,16 @@
 #include <variant>
 #include <memory>
 
+
 // TODO
-// 1) Cor por tipo de node
-// 2) Cor por tipo de input e output
-// 3) Deixar mais generalizado e modular input e output (por exemplo matar aquela palhaçada de Run() do conversor)
-// 4) Arrumar uma barra de carregamento melhor
-// 5) Fazer o conversor apagar imagens
-// 6) Node de preview (Mesma coisa que o de preset) que mostre algumas das imagens com conversão em uma pasta temp e apague elas depois de mostrar 
-// 7) Node de conversor poder refazer
-// 8) Node de edição de preset
+// 1) [x] Cor por tipo de node
+// 2) [x] Cor por tipo de input e output
+// 3) [x] Deixar mais generalizado e modular input e output (por exemplo matar aquela palhaçada de Run() do conversor)
+// 4) [ ] Arrumar uma barra de carregamento melhor
+// 5) [ ] Fazer o conversor apagar imagens
+// 6) [ ] Node de preview (Mesma coisa que o de preset) que mostre algumas das imagens com conversão em uma pasta temp e apague elas depois de mostrar 
+// 7) [ ] Node de conversor poder refazer
+// 8) [ ] Node de edição de preset
 
 // BACKBURNER
 // 1) Parar de usar o slk 
@@ -104,16 +107,12 @@ void DebugRegistry(const std::vector<std::unique_ptr<NodeBase>>& nodes)
 
 int main(int argc, char* argv[])
 {
-    // =========================
-    // SDL
-    // =========================
-
     SDL_Init(SDL_INIT_VIDEO);
 
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-
+    LoadPalette("default.pal");
     SDL_Window* window = SDL_CreateWindow(
         "Tesseract Conversor",
         SDL_WINDOWPOS_CENTERED,
@@ -180,6 +179,14 @@ int main(int argc, char* argv[])
         "Path Formatter Node",
         [](std::function<int()> next) {
             return std::make_unique<PathInputNode>(next());
+        }
+    });
+
+    GetNodeRegistry().push_back({
+        "palette_viewer_node",
+        "Palette Viewer",
+        [](std::function<int()> next) {
+            return std::make_unique<PaletteViewerNode>(next());
         }
     });
 
@@ -324,14 +331,12 @@ int main(int argc, char* argv[])
                 std::vector<int> selected_ids(count);
                 ImNodes::GetSelectedNodes(selected_ids.data());
  
-                // Remove do registry (links órfãos incluídos) antes de destruir os nós
                 for (int id : selected_ids) {
                     NodeBase* node = GetRuntimeNodeRegistry().GetNode(id);
                     if (node) GetRuntimeNodeRegistry().RemoveLinksForNode(node);
                     GetRuntimeNodeRegistry().RemoveNode(id);
                 }
  
-                // Remove do vetor de nós
                 nodes.erase(
                     std::remove_if(nodes.begin(), nodes.end(),
                         [&selected_ids](const std::unique_ptr<NodeBase>& node) {

@@ -4,7 +4,7 @@
 #include <vector>
 #include <variant>
 #include "types/Preset.h"
-
+#include "util/Palette.h"
 enum class PinKind {
     Input,
     Output
@@ -47,11 +47,30 @@ struct NodePin {
 
 inline ImU32 PinColor(PinType type) {
     switch (type) {
-        case PinType::String:  return IM_COL32(94,  214, 114, 255); // verde
-        case PinType::Preset:  return IM_COL32(214, 134, 94,  255); // laranja
-        case PinType::Int:     return IM_COL32(94,  148, 214, 255); // azul
-        case PinType::Float:   return IM_COL32(174, 94,  214, 255); // roxo
-        case PinType::Bool:    return IM_COL32(214, 94,  94,  255); // vermelho
-        default:               return IM_COL32(180, 180, 180, 255); // cinza
+        case PinType::String:  return Palette(39); // verde
+        case PinType::Preset:  return Palette(31); // laranja
+        case PinType::Int:     return Palette(47); // azul
+        case PinType::Float:   return Palette(52); // roxo
+        case PinType::Bool:    return Palette(64); // vermelho
+        default:               return Palette(7); // cinza
     }
+}
+
+inline bool IsColorDark(ImU32 color)
+{
+    ImVec4 c = ImGui::ColorConvertU32ToFloat4(color);
+
+    float luminance =
+        (0.299f * c.x) +
+        (0.587f * c.y) +
+        (0.114f * c.z);
+
+    return luminance < 0.5f;
+}
+
+inline ImU32 GetTextColorForBackground(ImU32 bg)
+{
+    return IsColorDark(bg)
+        ? IM_COL32(255, 255, 255, 255) // branco
+        : IM_COL32(0, 0, 0, 255);      // preto
 }

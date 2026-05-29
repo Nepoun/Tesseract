@@ -29,7 +29,7 @@ struct PresetNode : public NodeBase {
 
     PresetNode(int id):
         NodeBase(id, "preset_node", "Preset") {
-            node_color = IM_COL32(50, 55, 75, 255);
+            node_color = Palette(47);
             outputs.emplace_back( NextID(), id, "Preset", PinType::Preset);
         }
 

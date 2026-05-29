@@ -13,7 +13,7 @@ struct PathInputNode : public NodeBase {
     bool file_exists = false;
 
     PathInputNode(int id): NodeBase(id, "path_input_node", "Path Input") {
-        node_color = IM_COL32(50, 55, 75, 255);
+        node_color = Palette(42);
         outputs.emplace_back(NextID(), id, "Path", PinType::String);
     }
 

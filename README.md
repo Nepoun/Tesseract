@@ -3,7 +3,7 @@ Tesseract (temporary name) is an experimental node-based image processing tool w
 
 The project started as a simple utility for bulk processing images using SLK_img2pixel, but gradually evolved into a more flexible visual graph system inspired by node-based compositors and shader editors.
 
-The goal is to allow users to visually build image-processing pipelines by connecting nodes together — enabling workflows like pixel-art conversion, color grading, dithering, and batch processing.
+The goal is to allow users to visually build image-processing pipelines by connecting nodes together, enabling workflows like pixel-art conversion, color grading, dithering, and batch processing.
 
 ---
 

@@ -5,6 +5,8 @@ The project started as a simple utility for bulk processing images using SLK_img
 
 The goal is to allow users to visually build image-processing pipelines by connecting nodes together, enabling workflows like pixel-art conversion, color grading, dithering, and batch processing.
 
+![Tesseract node graph editor](assets/preview.png)
+
 ---
 
 ## Current Status

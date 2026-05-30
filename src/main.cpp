@@ -14,6 +14,8 @@
 #include "nodes/StringNode.h"
 #include "nodes/PathInputNode.h"
 #include "nodes/PaletteViewerNode.h"
+#include "nodes/PresetEditorNode.h"
+#include "nodes/AsciiDonutNode.h"
 
 #include "registry/NodeRegistry.h"
 #include "registry/RuntimeNodeRegistry.h"
@@ -140,6 +142,16 @@ int main(int argc, char* argv[])
     ImGui_ImplOpenGL3_Init("#version 330");
 
     std::vector<std::unique_ptr<NodeBase>> nodes;
+
+    GetNodeRegistry().push_back({
+        "ascii_donut_node",
+        "ASCII donut renderer",
+        [](std::function<int()> next) {
+            int id = next();
+            return std::make_unique<DonutNode>(id);
+        }
+    });
+
     GetNodeRegistry().push_back({
         "preset_node",
         "Preset Node",
@@ -175,7 +187,7 @@ int main(int argc, char* argv[])
     });
 
     GetNodeRegistry().push_back({
-        "path_node",
+        "path_input_node",
         "Path Formatter Node",
         [](std::function<int()> next) {
             return std::make_unique<PathInputNode>(next());
@@ -187,6 +199,14 @@ int main(int argc, char* argv[])
         "Palette Viewer",
         [](std::function<int()> next) {
             return std::make_unique<PaletteViewerNode>(next());
+        }
+    });
+
+    GetNodeRegistry().push_back({
+        "preset_editor_node",
+        "Preset Editor",
+        [](std::function<int()> next) {
+            return std::make_unique<PresetEditorNode>(next());
         }
     });
 

@@ -39,10 +39,10 @@ struct ConversorNode : public NodeBase {
         NodeBase::Deserialize(j);
         if (j.contains("output_folder"))
             strncpy(output_folder,
-                    j["output_folder"].get<std::string>().c_str(),
+                    j["output_folder"].get<std::string>().c_str(), 
                     sizeof(output_folder));
     }
-    
+        
     bool HasRunButton() override {
         return true;
     }
@@ -71,8 +71,10 @@ struct ConversorNode : public NodeBase {
         const char* folder_path = nullptr;
         const char* exe_path    = nullptr;
 
-        if (std::holds_alternative<Preset>(preset_data.value))
-            preset_path = std::get<Preset>(preset_data.value).path;
+        if (std::holds_alternative<Preset>(preset_data.value)) {
+            preset_str  = std::get<Preset>(preset_data.value).path; // copia pra preset_str
+            preset_path = preset_str.c_str();                       // ponteiro seguro
+        }
 
         if (std::holds_alternative<std::string>(folder_data.value)) {
             folder_str  = std::get<std::string>(folder_data.value);
@@ -105,8 +107,11 @@ struct ConversorNode : public NodeBase {
     // -------------------------
 
     void Run(const char* preset_path, const char* folder_in, const char* exe_path) {
-        if (task.valid())
-            return;
+        if (task.valid()){
+            if (status == Status::Running){
+                return;
+            }
+        }
 
         if (!preset_path || !folder_in) {
             status = Status::Error;

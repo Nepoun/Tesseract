@@ -1,19 +1,31 @@
 #pragma once
- 
 #include "NodeBase.h"
 #include "util/IdUtil.h"
 #include "types/Preset.h"
-#include <cstring>
 #include <filesystem>
 
 struct PresetNode : public NodeBase {
-    Preset preset;
 
-    bool verified = false;
+    Preset preset;
+    bool verified    = false;
     bool file_exists = false;
 
-    const char* default_name = "Default";
-    const char* default_path = "C:/Users/purpl/Desktop/NovoEu/BOBimg2pix/build/presettarget.json";
+    // Buffers separados só para o ImGui::InputText
+    char buf_name[128] = "";
+    char buf_path[512] = "";
+
+    static constexpr const char* DEFAULT_NAME = "Default";
+    static constexpr const char* DEFAULT_PATH =
+        "C:/Users/purpl/Desktop/NovoEu/BOBimg2pix/build/presettarget.json";
+
+    PresetNode(int id)
+        : NodeBase(id, "preset_node", "Preset")
+    {
+        node_color = Palette(47);
+        outputs.emplace_back(NextID(), id, "Preset", PinType::Preset);
+    }
+
+    // ------------------------------------------------------------------ I/O
 
     nlohmann::json Serialize() const override {
         auto j = NodeBase::Serialize();
@@ -23,110 +35,80 @@ struct PresetNode : public NodeBase {
 
     void Deserialize(const nlohmann::json& j) override {
         NodeBase::Deserialize(j);
-        if (j.contains("preset"))
+        if (j.contains("preset")) {
             preset = DeserializePreset(j["preset"]);
-    }
-
-    PresetNode(int id):
-        NodeBase(id, "preset_node", "Preset") {
-            node_color = Palette(47);
-            outputs.emplace_back( NextID(), id, "Preset", PinType::Preset);
+            SyncBuffersFromPreset();
         }
+    }
 
     NodeOutput GetOutput() override {
-        return { "Preset path output", PinType::Preset, preset };
+        return {"Preset path output", PinType::Preset, preset};
     }
 
-    bool FileExists() const {
-        return preset.path[0] != '\0' &&
-               std::filesystem::exists(preset.path);
-    }
-
-    bool CanVerify() const {
-        return preset.name[0] != '\0' &&
-               preset.path[0] != '\0';
-    }
+    // ------------------------------------------------------------------ Draw
 
     void DrawContent() override {
-        // ── Inputs ─────────────────────────────────────
-        ImGui::SetNextItemWidth(180);
-        ImGui::InputText("Nome", preset.name, sizeof(preset.name));
 
         ImGui::SetNextItemWidth(180);
-        if (ImGui::InputText("Caminho", preset.path, sizeof(preset.path)))
-        {
-            // Normaliza separadores
-            for (char* c = preset.path; *c; ++c)
-                if (*c == '/')
-                    *c = '\\';
+        if (ImGui::InputText("Nome", buf_name, sizeof(buf_name))) {
+            preset.name = buf_name;
+            verified = false;
+        }
 
-            // Mudou caminho = invalida verificação antiga
+        ImGui::SetNextItemWidth(180);
+        if (ImGui::InputText("Caminho", buf_path, sizeof(buf_path))) {
+            for (char* c = buf_path; *c; ++c)
+                if (*c == '/') *c = '\\';
+            preset.path = buf_path;
             verified = false;
         }
 
         ImGui::Spacing();
 
-        // ── Botão verificar ────────────────────────────
-        if (!CanVerify()) {
-            ImGui::BeginDisabled();
+        // Botão Verificar
+        const bool can_verify = !preset.name.empty() && !preset.path.empty();
+        if (!can_verify) ImGui::BeginDisabled();
+        if (ImGui::SmallButton("Verificar")) {
+            verified    = true;
+            file_exists = std::filesystem::exists(preset.path);
         }
+        if (!can_verify) ImGui::EndDisabled();
 
-        if (ImGui::SmallButton("Verificar"))
-        {
-            verified = true;
-            file_exists = FileExists();
-        }
-
-        if (!CanVerify()) {
-            ImGui::EndDisabled();
-        }
-
-        if (ImGui::SmallButton("Criar Default"))
-        {
-            std::strncpy(preset.name, default_name, sizeof(preset.name));
-            preset.name[sizeof(preset.name) - 1] = '\0';
-
-            std::strncpy(preset.path, default_path, sizeof(preset.path));
-            preset.path[sizeof(preset.path) - 1] = '\0';
-
-            // normaliza barras
-            for (char* c = preset.path; *c; ++c)
-                if (*c == '/')
-                    *c = '\\';
-
-            verified = false;
+        // Botão Default
+        if (ImGui::SmallButton("Criar Default")) {
+            preset.name = DEFAULT_NAME;
+            preset.path = DEFAULT_PATH;
+            for (char& c : preset.path)
+                if (c == '/') c = '\\';
+            SyncBuffersFromPreset();
+            verified    = false;
             file_exists = false;
         }
 
-
-        // ── Resultado ──────────────────────────────────
-        if (verified)
-        {
+        // Resultado da verificação
+        if (verified) {
             ImGui::Spacing();
-
-            if (file_exists) {
-                ImGui::TextColored(
-                    ImVec4(0.3f, 1.0f, 0.3f, 1.0f),
-                    "[OK]"
-                );
-            }
-            else {
-                ImGui::TextColored(
-                    ImVec4(1.0f, 0.3f, 0.3f, 1.0f),
-                    "[Arquivo nao encontrado]"
-                );
-            }
+            if (file_exists)
+                ImGui::TextColored({0.3f, 1.0f, 0.3f, 1.0f}, "[OK]");
+            else
+                ImGui::TextColored({1.0f, 0.3f, 0.3f, 1.0f}, "[Arquivo nao encontrado]");
 
             ImGui::Spacing();
-
-            if (ImGui::SmallButton("Limpar"))
-            {
-                preset.name[0] = '\0';
-                preset.path[0] = '\0';
-
-                verified = false;
+            if (ImGui::SmallButton("Limpar")) {
+                preset      = {};
+                buf_name[0] = buf_path[0] = '\0';
+                verified    = false;
                 file_exists = false;
             }
         }
+    }
+
+private:
+
+    void SyncBuffersFromPreset() {
+        strncpy(buf_name, preset.name.c_str(), sizeof(buf_name) - 1);
+        buf_name[sizeof(buf_name) - 1] = '\0';
+        strncpy(buf_path, preset.path.c_str(), sizeof(buf_path) - 1);
+        buf_path[sizeof(buf_path) - 1] = '\0';
     }
 };

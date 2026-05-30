@@ -15,6 +15,11 @@ struct NodeOutput {
     PinValue value;
 };
 
+struct NodeTemplateOption {
+    std::string label;
+    std::function<void()> apply;
+};
+
 struct NodeBase {
     int id;
     std::string type_id;
@@ -25,8 +30,13 @@ struct NodeBase {
     ImU32 node_color = Palette(17);
     std::function<NodeOutput(int)> get_input;
 
+    std::vector<NodeTemplateOption> template_options;
+    int selected_template = 0;
+
     NodeBase(int id, const char* type_id, const char* title):
         id(id), type_id(type_id), title(title), pos(0, 0) {}
+
+
 
     virtual ~NodeBase() = default;
 
@@ -52,6 +62,34 @@ struct NodeBase {
 
     virtual void Deserialize(const nlohmann::json& j) {
     }
+
+    void DrawTemplateSelector() {
+
+        if (template_options.empty())
+            return;
+
+        std::vector<const char*> names;
+        names.reserve(template_options.size());
+
+        for (auto& opt : template_options)
+            names.push_back(opt.label.c_str());
+
+        ImGui::SetNextItemWidth(140);
+
+        ImGui::Combo(
+            "##templates",
+            &selected_template,
+            names.data(),
+            (int)names.size()
+        );
+
+        ImGui::SameLine();
+
+        if (ImGui::SmallButton("Apply")) {
+            template_options[selected_template].apply();
+        }
+    }
+
     void Draw() {
 
         ImNodes::PushColorStyle(
@@ -137,6 +175,7 @@ struct NodeBase {
         ImGui::PushID(id);
 
             DrawContent();
+            DrawTemplateSelector();
 
             if (HasRunButton()) {
 

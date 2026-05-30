@@ -12,9 +12,71 @@ struct PathInputNode : public NodeBase {
     bool verified    = false;
     bool file_exists = false;
 
-    PathInputNode(int id): NodeBase(id, "path_input_node", "Path Input") {
+    PathInputNode(int id)
+        : NodeBase(id, "path_input_node", "Path Input")
+    {
         node_color = Palette(42);
+
         outputs.emplace_back(NextID(), id, "Path", PinType::String);
+
+        template_options.push_back({
+            "PRESET",
+            [this]() {
+                path = "presets";
+                NormalizePath(path);
+                verified = false;
+                file_exists = false;
+            }
+        });
+        template_options.push_back({
+            "PRESET -> Temp",
+            [this]() {
+                path = "presets/temp";
+                NormalizePath(path);
+                verified = false;
+                file_exists = false;
+            }
+        });
+        template_options.push_back({
+            "PRESET -> Output",
+            [this]() {
+                path = "presets/output";
+                NormalizePath(path);
+                verified = false;
+                file_exists = false;
+            }
+        });
+
+        template_options.push_back({
+            "PRESET -> Sample",
+            [this]() {
+                path = "C:/Users/purpl/Desktop/NovoEu/3D/the third great preset ig.json";
+                NormalizePath(path);
+                verified = false;
+                file_exists = false;
+            }
+        });
+        
+        template_options.push_back({
+            "EXE -> SLK",
+            [this]() {
+                path = "slk/SLK_img2pix_cmd.exe";
+                NormalizePath(path);
+                verified = false;
+                file_exists = false;
+            }
+        });
+
+        template_options.push_back({
+            "TEXTURES -> Sample Input Texture",
+            [this]() {
+                path = "C:/Users/purpl/Desktop/NovoEu/3D/sample_tex";
+                NormalizePath(path);
+
+                verified = false;
+                file_exists = false;
+            }
+        });
     }
 
     // Save / Load
@@ -74,13 +136,6 @@ struct PathInputNode : public NodeBase {
         if (!CanVerify()) ImGui::EndDisabled();
 
         ImGui::SameLine();
-
-        if (ImGui::SmallButton("Default")) {
-            path = default_path;
-            NormalizePath(path);
-            verified    = false;
-            file_exists = false;
-        }
 
         if (!verified)
             return;

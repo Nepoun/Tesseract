@@ -1,87 +1,99 @@
 # Tesseract
+Tesseract (temporary name) is an experimental node-based image processing tool written in C++.
 
-Tesseract (Temporary name) is an experimental node-based image processing tool written in C++.
+The project started as a simple utility for bulk processing images using SLK_img2pixel, but gradually evolved into a more flexible visual graph system inspired by node-based compositors and shader editors.
 
-The project started as a simple utility for applying shader pipelines and bulk processing to images using tools such as SLK_img2pixel, but gradually evolved into a more flexible visual graph system inspired by node-based compositors and shader editors.
-
-The goal is to allow users to visually create image-processing pipelines by connecting nodes together, enabling workflows such as shader passes, pixel-art conversion, procedural operations, and batch processing.
+The goal is to allow users to visually build image-processing pipelines by connecting nodes together — enabling workflows like pixel-art conversion, color grading, dithering, and batch processing.
 
 ---
 
 ## Current Status
 
-This project is currently in a very early stage of development.
+Early stage. Most systems are still experimental and subject to major changes.
 
-Most systems are still experimental and subject to major architectural and workflow changes.
-
-The current focus is on:
-- Building the node graph system
-- Defining the rendering pipeline
-- Integrating shader-based image processing
-- Experimenting with workflow and usability
+Current focus:
+- Solidifying the node graph architecture
+- Expanding the preset and processing pipeline
+- Improving usability and workflow
 
 ---
 
-## Planned Features
+## Using This Repository
 
-### Core
-- [ ] Node graph editor
-- [ ] Image input/output nodes
-- [ ] Graph serialization (save/load)
-- [ ] Real-time preview
-- [ ] Undo/redo support
+This repository is currently meant as a code showcase rather than a ready-to-use tool.
+
+Even with all the project files, you would still need to download SLK_img2pixel separately
+and do some manual configuration to get things running. In the future I plan to improve
+this, making setup easier and the project more self-contained. Even removing completely SLK_img2pixel from the project is planned
+
+---
+
+## Features
+
+### Node Graph
+- [x] Node graph editor (Dear ImGui + ImnNodes)
+- [x] Typed pin system (String, Preset, Int, Float, Bool)
+- [x] Data propagation between nodes via runtime link registry
+- [x] Polymorphic node architecture (extend `NodeBase` to add nodes)
+- [x] Graph serialization and deserialization (JSON)
+- [ ] Upd
+- [ ] Real-time preview node
+- [ ] Undo/redo
+
+### Nodes
+- [x] Preset node (define and verify a preset file)
+- [x] Preset editor node (edit all processing parameters visually)
+- [x] Conversor node (batch image conversion with async execution and progress tracking)
+- [x] Path formatter node
+- [x] String creator node
+- [x] Data viewer node
+- [x] Palette viewer node
+- [ ] Image preview node
+- [ ] Mask node
+- [ ] Layer compositor node
 
 ### Processing
-- [ ] Shader-based image processing
-- [ ] Custom user-written shader support
-- [ ] SLK_img2pixel integration
+- [x] SLK_img2pixel integration
+- [x] Color adjustments (brightness, contrast, saturation, hue, gamma, tint)
+- [x] Transform controls (scale, offset, sampling mode)
+- [x] Dithering (mode, amount, target colors, alpha threshold, KMeans++)
+- [x] Blur and sharpening
+- [x] Preset palette preservation across edits
+- [ ] Shader-based processing
+- [ ] Custom user-written shaders
 - [ ] Procedural image operations
-- [ ] Layer compositing
-- [ ] Mask support
 
 ### Batch Workflow
-- [ ] Bulk image processing
-- [ ] Folder input/output
-- [ ] Preset pipelines
+- [x] Folder input with automatic image discovery (.png, .jpg, .bmp, .tga)
+- [x] Async batch conversion with per-image progress counter
+- [x] Configurable output folder
+- [x] Preset-driven pipeline execution
 - [ ] Export automation
-
-### Future Ideas
-- [ ] Shape generation nodes
-- [ ] Procedural texture generation
-- [ ] Animation support
-- [ ] Plugin system
-- [ ] GPU compute workflows
+- [ ] Re-run / redo converted images
 
 ---
 
 ## Tech Stack
 
-Currently using:
-
 - C++
 - Dear ImGui
-- SDL2 backend
-- OpenGL 3 renderer
-- GLSL shaders
+- ImnNodes
+- SDL2
+- OpenGL 3.3
+- nlohmann/json
 
 ---
 
 ## Third-Party Tools
 
-This project uses SLK_img2pixel as part of its image-processing workflow and node system.
-
-SLK_img2pixel was created by Captain4LK and can be found here:
-
-https://captain4lk.itch.io/slk-img2pixel
+Uses [SLK_img2pixel](https://captain4lk.itch.io/slk-img2pixel) by Captain4LK as part of its image processing pipeline.
 
 ---
 
 ## Inspiration
 
-Inspired by tools such as:
-
 - Pixel Composer
-- Shader Graph
+- Shader Graph (Unity)
 - Substance Designer
 - Material Maker
 - Compositor-style workflows
@@ -90,11 +102,4 @@ Inspired by tools such as:
 
 ## Goals
 
-The main goal of this project is to explore:
-- Node-based workflows
-- GPU image processing
-- Procedural graphics pipelines
-- Tool development in C++
-- Real-time rendering architectures
-
-while also serving as a flexible image-processing utility for pixel-art and shader experimentation.
+Explore node-based tool development in C++ while building something actually useful for pixel-art and shader workflows.

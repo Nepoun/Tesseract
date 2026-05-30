@@ -45,7 +45,7 @@
 
 // BACKBURNER
 // 1) Parar de usar o slk 
-// 2) Tipo de input "Textura", "UV"
+// 2) Tipo de input "Textura", "UV" e vetores
 // 3) Multiply, add e blend
 
 NodeOutput GetInputData(int input_pin_id)
@@ -403,10 +403,6 @@ int main(int argc, char* argv[])
 
         SDL_GL_SwapWindow(window);
     }
-    // Destruir tudo que tu cria em ordem inversa
-    // Nodes vector é destruido ao sair de escopo automaticamente
-    // O motivo p usar unique_ptr é para não precisar deletar cada nó manualmente
-
     ImNodes::DestroyContext();
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplSDL2_Shutdown();
